@@ -1,0 +1,19 @@
+# --- Serveur API ---
+fastapi
+uvicorn[standard]
+
+# --- Traitement de données ---
+pandas
+numpy
+
+# --- Intelligence Artificielle & NLP ---
+sentence-transformers
+torch
+
+# --- Recherche Vectorielle ---
+# Utilise faiss-cpu pour la compatibilité maximale (ou faiss-gpu si tu as une carte NVIDIA)
+faiss-cpu
+
+# --- Utilitaires (Optionnel mais recommandé) ---
+python-multipart
+scikit-learn
