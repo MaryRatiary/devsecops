@@ -1,6 +1,5 @@
 from fastapi import FastAPI, Query
 from fastapi.responses import FileResponse
-from fastapi.staticfiles import StaticFiles
 import pandas as pd
 import numpy as np
 import faiss
@@ -10,8 +9,8 @@ from sentence_transformers import SentenceTransformer
 app = FastAPI()
 
 # --- Chargement des ressources ---
-data = pd.read_csv('music_data_cleaned.csv')
-embeddings = np.load('music_embeddings.npy').astype('float32')
+data = pd.read_csv('data/lyrx_cleaned.csv')
+embeddings = np.load('models/music_embeddings.npy').astype('float32')
 model = SentenceTransformer('paraphrase-multilingual-MiniLM-L12-v2')
 
 index = faiss.IndexFlatIP(embeddings.shape[1])
@@ -41,11 +40,9 @@ def search(query: str = Query(...), k: int = 10):
         output.append({
             "title": row['track_name'],
             "artist": row['track_artist'],
-            # Ou row['track_album_release_date'][:4] si dispo
             "year": "2024",
             "duration": "3:45",
             "score": score,
-            # Initiale pour l'icône
             "art": row['track_name'][0],
             "color": "#B8865A",
             "textColor": "#FFF",

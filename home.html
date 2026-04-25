@@ -14,7 +14,6 @@
     --sand-200: #E5DDD2;
     --sand-300: #C8BBAA;
     --sand-500: #8C7D6B;
-    --sand-700: #4A3F33;
     --sand-900: #1E1812;
     --accent: #B8865A;
     --accent-light: #F5EDDE;
@@ -24,7 +23,6 @@
     --font-body: 'DM Sans', system-ui, sans-serif;
     --radius-sm: 10px;
     --radius-md: 16px;
-    --radius-lg: 24px;
     --transition: 0.35s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
@@ -36,6 +34,7 @@
     overflow-x: hidden;
   }
 
+  /* ── NAV ── */
   nav {
     display: flex;
     align-items: center;
@@ -43,402 +42,345 @@
     padding: 1.25rem 2.5rem;
     border-bottom: 1px solid var(--sand-200);
     background: rgba(250,248,245,0.88);
-    backdrop-filter: blur(10px);
+    backdrop-filter: blur(12px);
     position: sticky;
     top: 0;
     z-index: 100;
     animation: slideDown 0.6s ease both;
   }
 
-  .logo {
-    font-family: var(--font-display);
-    font-size: 1.6rem;
-    letter-spacing: -0.02em;
-    color: var(--sand-900);
-  }
+  .logo { font-family: var(--font-display); font-size: 1.6rem; letter-spacing: -0.02em; color: var(--sand-900); }
   .logo span { color: var(--accent); font-style: italic; }
 
-  .nav-links {
-    display: flex;
-    gap: 0.25rem;
-    list-style: none;
-  }
-
+  .nav-links { display: flex; gap: 0.25rem; list-style: none; }
   .nav-links a {
-    display: flex;
-    align-items: center;
-    gap: 0.45rem;
-    font-size: 0.85rem;
-    font-weight: 400;
-    color: var(--sand-500);
-    text-decoration: none;
-    letter-spacing: 0.01em;
-    padding: 0.45rem 0.85rem;
+    display: flex; align-items: center; gap: 0.45rem;
+    font-size: 0.85rem; font-weight: 400; color: var(--sand-500);
+    text-decoration: none; padding: 0.45rem 0.85rem;
     border-radius: var(--radius-sm);
     transition: background var(--transition), color var(--transition);
   }
-
-  .nav-links a svg { flex-shrink: 0; }
-
-  .nav-links a:hover {
-    background: var(--sand-100);
-    color: var(--sand-900);
-  }
+  .nav-links a:hover { background: var(--sand-100); color: var(--sand-900); }
 
   .nav-pill {
-    font-size: 0.8rem;
-    padding: 0.4rem 1rem;
-    border-radius: 999px;
-    background: var(--sand-900);
-    color: var(--sand-50);
-    border: none;
-    cursor: pointer;
-    font-family: var(--font-body);
-    font-weight: 500;
+    font-size: 0.8rem; padding: 0.4rem 1rem; border-radius: 999px;
+    background: var(--sand-900); color: var(--sand-50); border: none;
+    cursor: pointer; font-family: var(--font-body); font-weight: 500;
     transition: opacity var(--transition), transform var(--transition);
   }
   .nav-pill:hover { opacity: 0.8; transform: scale(0.98); }
 
-  .hero {
+  /* ── HERO + STRIPES ── */
+  .hero-outer {
+    position: relative;
+    overflow: hidden;
     padding: 5rem 2.5rem 3rem;
-    max-width: 720px;
-    margin: 0 auto;
-    text-align: center;
+  }
+
+  .stripes {
+    position: absolute;
+    inset: -20% -10%;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .stripe {
+    position: absolute;
+    top: -60%;
+    height: 300%;
+    transform-origin: center;
+    transform: rotate(-18deg);
+    border-radius: 2px;
+  }
+
+  .stripe-1 { left: -8%;  width: 280px; background: var(--sand-200); opacity: 0.32; animation: stripeDrift 18s ease-in-out infinite; }
+  .stripe-2 { left: 18%;  width: 120px; background: var(--accent);   opacity: 0.07; animation: stripeDrift 24s ease-in-out 2s infinite; }
+  .stripe-3 { left: 52%;  width: 340px; background: var(--sand-200); opacity: 0.22; animation: stripeDrift 20s ease-in-out 1s infinite; }
+  .stripe-4 { left: 78%;  width: 180px; background: var(--accent);   opacity: 0.06; animation: stripeDrift 26s ease-in-out 3s infinite; }
+
+  .hero-vignette {
+    position: absolute; inset: 0;
+    background: radial-gradient(ellipse 60% 90% at 50% 50%, var(--sand-50) 35%, transparent 100%);
+    z-index: 1; pointer-events: none;
+  }
+
+  .hero-content {
+    position: relative; z-index: 2;
+    max-width: 600px; margin: 0 auto; text-align: center;
     animation: fadeUp 0.8s ease 0.1s both;
   }
 
   .hero-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    font-size: 0.75rem;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: var(--accent);
-    background: var(--accent-light);
-    padding: 0.35rem 0.9rem;
-    border-radius: 999px;
-    margin-bottom: 1.5rem;
-    font-weight: 500;
+    display: inline-flex; align-items: center; gap: 0.5rem;
+    font-size: 0.75rem; letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--accent); background: var(--accent-light);
+    padding: 0.35rem 0.9rem; border-radius: 999px;
+    margin-bottom: 1.5rem; font-weight: 500;
   }
 
   .pulse-dot {
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    background: var(--accent);
-    animation: pulse 2s ease infinite;
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--accent); animation: pulse 2s ease infinite;
   }
 
-  .hero h1 {
+  .hero-content h1 {
     font-family: var(--font-display);
-    font-size: 3.2rem;
-    line-height: 1.15;
-    letter-spacing: -0.03em;
-    color: var(--sand-900);
-    margin-bottom: 1rem;
+    font-size: 3.2rem; line-height: 1.15;
+    letter-spacing: -0.03em; color: var(--sand-900); margin-bottom: 1rem;
   }
-  .hero h1 em { color: var(--accent); font-style: italic; }
+  .hero-content h1 em { color: var(--accent); font-style: italic; }
 
-  .hero p {
-    font-size: 1rem;
-    color: var(--sand-500);
-    line-height: 1.7;
-    font-weight: 300;
-    margin-bottom: 2.5rem;
+  .hero-content p {
+    font-size: 1rem; color: var(--sand-500);
+    line-height: 1.7; font-weight: 300; margin-bottom: 2.5rem;
   }
 
-  .search-wrap {
-    position: relative;
+  /* ── SEARCH ── */
+  .search-container {
+    max-width: 600px; margin: 0 auto; padding: 0 2.5rem;
+    position: relative; z-index: 2;
     animation: fadeUp 0.8s ease 0.25s both;
-    margin-bottom: 0.75rem;
   }
+
+  .search-wrap { position: relative; margin-bottom: 0.75rem; }
 
   .search-bar {
-    width: 100%;
-    padding: 1rem 1.25rem 1rem 3.25rem;
-    font-size: 0.95rem;
-    font-family: var(--font-body);
-    font-weight: 400;
-    background: #fff;
-    border: 1.5px solid var(--sand-200);
-    border-radius: var(--radius-md);
-    outline: none;
-    color: var(--sand-900);
+    width: 100%; padding: 1rem 1.25rem 1rem 3.25rem;
+    font-size: 0.95rem; font-family: var(--font-body); font-weight: 400;
+    background: #fff; border: 1.5px solid var(--sand-200);
+    border-radius: var(--radius-md); outline: none; color: var(--sand-900);
     transition: border-color var(--transition), box-shadow var(--transition);
   }
   .search-bar::placeholder { color: var(--sand-300); }
-  .search-bar:focus {
-    border-color: var(--accent);
-    box-shadow: 0 0 0 4px rgba(184,134,90,0.1);
-  }
+  .search-bar:focus { border-color: var(--accent); box-shadow: 0 0 0 4px rgba(184,134,90,0.1); }
 
   .search-icon {
-    position: absolute;
-    left: 1.1rem;
-    top: 50%;
-    transform: translateY(-50%);
-    color: var(--sand-300);
-    pointer-events: none;
+    position: absolute; left: 1.1rem; top: 50%;
+    transform: translateY(-50%); color: var(--sand-300); pointer-events: none;
   }
 
   .search-btn {
-    position: absolute;
-    right: 0.5rem;
-    top: 50%;
+    position: absolute; right: 0.5rem; top: 50%;
     transform: translateY(-50%);
-    background: var(--sand-900);
-    color: var(--sand-50);
-    border: none;
-    border-radius: var(--radius-sm);
-    padding: 0.55rem 1.1rem;
-    font-family: var(--font-body);
-    font-size: 0.85rem;
-    font-weight: 500;
-    cursor: pointer;
+    background: var(--sand-900); color: var(--sand-50); border: none;
+    border-radius: var(--radius-sm); padding: 0.55rem 1.1rem;
+    font-family: var(--font-body); font-size: 0.85rem; font-weight: 500;
+    cursor: pointer; display: flex; align-items: center; gap: 0.4rem;
     transition: opacity var(--transition), transform var(--transition);
+    min-width: 90px; justify-content: center;
   }
-  .search-btn:hover { opacity: 0.8; transform: translateY(-50%) scale(0.97); }
+  .search-btn:hover:not(:disabled) { opacity: 0.8; transform: translateY(-50%) scale(0.97); }
+  .search-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
-  .search-hints {
-    display: flex;
-    gap: 0.5rem;
-    flex-wrap: wrap;
-    justify-content: center;
-    animation: fadeUp 0.8s ease 0.35s both;
-  }
+  .search-hints { display: flex; gap: 0.5rem; flex-wrap: wrap; justify-content: center; }
 
   .hint-chip {
-    font-size: 0.78rem;
-    color: var(--sand-500);
-    background: var(--sand-100);
-    border: 1px solid var(--sand-200);
-    border-radius: 999px;
-    padding: 0.3rem 0.75rem;
-    cursor: pointer;
+    font-size: 0.78rem; color: var(--sand-500);
+    background: var(--sand-100); border: 1px solid var(--sand-200);
+    border-radius: 999px; padding: 0.3rem 0.75rem; cursor: pointer;
     transition: background var(--transition), border-color var(--transition), color var(--transition);
-    font-weight: 400;
   }
   .hint-chip:hover { background: var(--accent-light); border-color: var(--accent); color: var(--accent); }
 
+  /* ── LOADING SPINNER ── */
+  .spinner {
+    width: 14px; height: 14px;
+    border: 2px solid rgba(255,255,255,0.3);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    flex-shrink: 0;
+  }
+
+  /* ── WAVEFORM ── */
   .waveform {
-    display: flex;
-    align-items: center;
-    gap: 3px;
-    margin: 5rem auto 0;
-    justify-content: center;
+    display: flex; align-items: center; gap: 3px;
+    margin: 5rem auto 0; justify-content: center;
     padding-bottom: 3rem;
     animation: fadeUp 0.8s ease 0.45s both;
   }
 
   .wave-bar {
-    width: 3px;
-    border-radius: 2px;
-    background: var(--sand-200);
+    width: 3px; border-radius: 2px; background: var(--sand-200);
     animation: wave 1.4s ease-in-out infinite;
   }
 
-  .wave-bar:nth-child(1) { height: 16px; animation-delay: 0s; }
-  .wave-bar:nth-child(2) { height: 22px; animation-delay: 0.1s; }
-  .wave-bar:nth-child(3) { height: 30px; animation-delay: 0.2s; }
-  .wave-bar:nth-child(4) { height: 40px; animation-delay: 0.3s; }
-  .wave-bar:nth-child(5) { height: 28px; animation-delay: 0.4s; }
-  .wave-bar:nth-child(6) { height: 36px; animation-delay: 0.5s; }
-  .wave-bar:nth-child(7) { height: 44px; animation-delay: 0.6s; }
-  .wave-bar:nth-child(8) { height: 32px; animation-delay: 0.7s; }
-  .wave-bar:nth-child(9) { height: 26px; animation-delay: 0.8s; }
-  .wave-bar:nth-child(10) { height: 38px; animation-delay: 0.9s; }
-  .wave-bar:nth-child(11) { height: 20px; animation-delay: 1.0s; }
-  .wave-bar:nth-child(12) { height: 14px; animation-delay: 1.1s; }
+  .wave-bar:nth-child(1)  { height: 10px; animation-delay: 0.00s; }
+  .wave-bar:nth-child(2)  { height: 16px; animation-delay: 0.08s; }
+  .wave-bar:nth-child(3)  { height: 24px; animation-delay: 0.16s; }
+  .wave-bar:nth-child(4)  { height: 34px; animation-delay: 0.24s; }
+  .wave-bar:nth-child(5)  { height: 44px; animation-delay: 0.32s; }
+  .wave-bar:nth-child(6)  { height: 52px; animation-delay: 0.40s; }
+  .wave-bar:nth-child(7)  { height: 44px; animation-delay: 0.48s; }
+  .wave-bar:nth-child(8)  { height: 34px; animation-delay: 0.56s; }
+  .wave-bar:nth-child(9)  { height: 24px; animation-delay: 0.64s; }
+  .wave-bar:nth-child(10) { height: 16px; animation-delay: 0.72s; }
+  .wave-bar:nth-child(11) { height: 10px; animation-delay: 0.80s; }
 
-  /* RESULTS */
+  /* ── RESULT VIEW ── */
   .result-panel {
-    max-width: 680px;
-    margin: 0 auto;
-    padding: 2rem 2.5rem;
-    display: none;
+    max-width: 680px; margin: 0 auto;
+    padding: 2rem 2.5rem; display: none;
   }
   .result-panel.active { display: block; animation: fadeUp 0.5s ease both; }
 
-  .section-title {
-    font-size: 0.7rem;
-    text-transform: uppercase;
-    letter-spacing: 0.12em;
-    color: var(--sand-300);
-    font-weight: 500;
-    margin-bottom: 1rem;
+  .result-header {
+    display: flex; align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1.5rem;
   }
-
-  .tags-row {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.3rem;
-    margin-bottom: 1.75rem;
-  }
-
-  .nlp-tag {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.35rem;
-    font-size: 0.72rem;
-    color: var(--sand-500);
-    background: var(--sand-100);
-    border: 1px solid var(--sand-200);
-    border-radius: 999px;
-    padding: 0.25rem 0.65rem;
-    font-weight: 400;
-  }
-
-  .result-row {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    padding: 0.85rem 1rem;
-    border-radius: var(--radius-sm);
-    border: 1px solid transparent;
-    cursor: pointer;
-    transition: background var(--transition), border-color var(--transition);
-  }
-  .result-row:hover { background: #fff; border-color: var(--sand-200); }
-
-  .result-num {
-    font-size: 0.75rem;
-    color: var(--sand-300);
-    width: 20px;
-    text-align: right;
-    font-weight: 400;
-  }
-
-  .result-art {
-    width: 44px;
-    height: 44px;
-    border-radius: 8px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-family: var(--font-display);
-    font-size: 1.1rem;
-    flex-shrink: 0;
-  }
-
-  .result-info { flex: 1; min-width: 0; }
-
-  .result-title {
-    font-size: 0.9rem;
-    font-weight: 500;
-    color: var(--sand-900);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  .result-artist {
-    font-size: 0.78rem;
-    color: var(--sand-500);
-    font-weight: 300;
-  }
-
-  .result-meta {
-    font-size: 0.78rem;
-    color: var(--sand-300);
-    flex-shrink: 0;
-  }
-
-  .result-score {
-    font-size: 0.72rem;
-    padding: 0.2rem 0.55rem;
-    border-radius: 999px;
-    font-weight: 500;
-    flex-shrink: 0;
-  }
-
-  .score-high { background: var(--green-light); color: var(--green); }
-  .score-mid { background: var(--accent-light); color: var(--accent); }
 
   .back-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.4rem;
-    font-size: 0.82rem;
-    color: var(--sand-500);
-    background: none;
-    border: none;
-    cursor: pointer;
-    font-family: var(--font-body);
-    padding: 0;
-    margin-bottom: 1.75rem;
+    display: inline-flex; align-items: center; gap: 0.4rem;
+    font-size: 0.82rem; color: var(--sand-500);
+    background: none; border: none; cursor: pointer;
+    font-family: var(--font-body); padding: 0;
     transition: color var(--transition);
   }
   .back-btn:hover { color: var(--sand-900); }
 
+  .result-count {
+    font-size: 0.75rem; color: var(--sand-300); font-weight: 400;
+  }
+
+  .section-title {
+    font-size: 0.7rem; text-transform: uppercase;
+    letter-spacing: 0.12em; color: var(--sand-300);
+    font-weight: 500; margin-bottom: 1rem;
+  }
+
+  .tags-row { display: flex; flex-wrap: wrap; gap: 0.3rem; margin-bottom: 1.75rem; }
+
+  .nlp-tag {
+    display: inline-flex; align-items: center; gap: 0.35rem;
+    font-size: 0.72rem; color: var(--sand-500);
+    background: var(--sand-100); border: 1px solid var(--sand-200);
+    border-radius: 999px; padding: 0.25rem 0.65rem;
+  }
+
+  /* ── RESULT ROWS ── */
+  .result-row {
+    display: flex; align-items: center; gap: 1rem;
+    padding: 0.85rem 1rem; border-radius: var(--radius-sm);
+    border: 1px solid transparent; cursor: pointer;
+    opacity: 0; transform: translateY(8px);
+    transition: background var(--transition), border-color var(--transition),
+                opacity 0.4s ease, transform 0.4s ease;
+  }
+  .result-row.visible { opacity: 1; transform: translateY(0); }
+  .result-row:hover { background: #fff; border-color: var(--sand-200); }
+
+  .result-num { font-size: 0.75rem; color: var(--sand-300); width: 20px; text-align: right; }
+
+  .result-art {
+    width: 44px; height: 44px; border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--font-display); font-size: 1.3rem;
+    font-weight: 400; flex-shrink: 0;
+    text-transform: uppercase;
+  }
+
+  .result-info { flex: 1; min-width: 0; }
+  .result-title { font-size: 0.9rem; font-weight: 500; color: var(--sand-900); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .result-artist { font-size: 0.78rem; color: var(--sand-500); font-weight: 300; }
+  .result-meta { font-size: 0.78rem; color: var(--sand-300); flex-shrink: 0; }
+
+  .result-score {
+    font-size: 0.72rem; padding: 0.2rem 0.55rem;
+    border-radius: 999px; font-weight: 500; flex-shrink: 0;
+  }
+  .score-high { background: var(--green-light); color: var(--green); }
+  .score-mid  { background: var(--accent-light); color: var(--accent); }
+
+  /* ── ERROR STATE ── */
+  .error-box {
+    text-align: center; padding: 2.5rem 1.5rem;
+    background: #fff3f3; border: 1px solid #ffd5d5;
+    border-radius: var(--radius-md); margin-top: 1rem;
+    display: none;
+  }
+  .error-box.visible { display: block; animation: fadeUp 0.4s ease both; }
+  .error-box p { font-size: 0.875rem; color: #c0392b; margin-bottom: 0.5rem; }
+  .error-box small { font-size: 0.75rem; color: var(--sand-500); }
+
+  /* ── KEYFRAMES ── */
   @keyframes slideDown {
     from { transform: translateY(-16px); opacity: 0; }
-    to { transform: translateY(0); opacity: 1; }
+    to   { transform: translateY(0); opacity: 1; }
   }
   @keyframes fadeUp {
     from { transform: translateY(18px); opacity: 0; }
-    to { transform: translateY(0); opacity: 1; }
+    to   { transform: translateY(0); opacity: 1; }
   }
   @keyframes pulse {
     0%, 100% { opacity: 1; transform: scale(1); }
-    50% { opacity: 0.5; transform: scale(0.8); }
+    50%       { opacity: 0.5; transform: scale(0.8); }
   }
   @keyframes wave {
-    0%, 100% { transform: scaleY(0.4); }
-    50% { transform: scaleY(1); }
+    0%, 100% { transform: scaleY(0.35); }
+    50%       { transform: scaleY(1); }
+  }
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+  @keyframes stripeDrift {
+    0%, 100% { transform: rotate(-18deg) translateX(0px); }
+    50%       { transform: rotate(-18deg) translateX(14px); }
   }
 </style>
 </head>
 <body>
 
+<!-- NAV -->
 <nav>
   <div class="logo">Lyr<span>x</span></div>
   <ul class="nav-links">
-    <li>
-      <a href="#">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
-          <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
-        </svg>
-        Discover
-      </a>
-    </li>
-    <li>
-      <a href="#">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
-          <path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/>
-        </svg>
-        Moods
-      </a>
-    </li>
-    <li>
-      <a href="#">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
-          <path d="M4 6h16M4 12h16M4 18h12"/>
-        </svg>
-        Lyrics
-      </a>
-    </li>
+    <li><a href="#">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      Discover
+    </a></li>
+    <li><a href="#">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+      Moods
+    </a></li>
+    <li><a href="#">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 6h16M4 12h16M4 18h12"/></svg>
+      Lyrics
+    </a></li>
   </ul>
   <button class="nav-pill">Sign in</button>
 </nav>
 
+<!-- HOME VIEW -->
 <div id="home-view">
-  <div class="hero">
-    <div class="hero-badge">
-      <div class="pulse-dot"></div>
-      NLP · Music Intelligence
+  <div class="hero-outer">
+    <div class="stripes">
+      <div class="stripe stripe-1"></div>
+      <div class="stripe stripe-2"></div>
+      <div class="stripe stripe-3"></div>
+      <div class="stripe stripe-4"></div>
     </div>
-    <h1>Find music the way<br/>you <em>feel</em> it</h1>
-    <p>Describe a mood, a memory, or a feeling.<br/>Lyrx understands what you mean.</p>
+    <div class="hero-vignette"></div>
+
+    <div class="hero-content">
+      <div class="hero-badge">
+        <div class="pulse-dot"></div>
+        NLP · Music Intelligence
+      </div>
+      <h1>Find music the way<br/>you <em>feel</em> it</h1>
+      <p>Describe a mood, a memory, or a feeling.<br/>Lyrx understands what you mean.</p>
+    </div>
   </div>
 
-  <div style="max-width:600px;margin:0 auto;padding:0 2.5rem;">
+  <div class="search-container">
     <div class="search-wrap">
       <svg class="search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
         <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
       </svg>
       <input id="search-input" class="search-bar" placeholder="une chanson triste pour la pluie du soir…" />
-      <button class="search-btn" onclick="doSearch()">Chercher</button>
+      <button class="search-btn" id="search-btn" onclick="doSearch()">
+        <span id="btn-label">Chercher</span>
+      </button>
     </div>
     <div class="search-hints">
       <div class="hint-chip" onclick="fillSearch('musique douce pour se concentrer')">musique douce pour se concentrer</div>
@@ -446,21 +388,31 @@
       <div class="hint-chip" onclick="fillSearch('nostalgie des années 90')">nostalgie des années 90</div>
       <div class="hint-chip" onclick="fillSearch('jazz minimaliste')">jazz minimaliste</div>
     </div>
+
+    <!-- Error box (home) -->
+    <div class="error-box" id="error-box">
+      <p>⚠️ Impossible de joindre l'API.</p>
+      <small>Vérifiez que le serveur FastAPI est bien lancé sur <code>http://localhost:8000</code>.</small>
+    </div>
   </div>
 
   <div class="waveform">
     <div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div>
     <div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div>
     <div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div>
-    <div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div>
+    <div class="wave-bar"></div><div class="wave-bar"></div>
   </div>
 </div>
 
+<!-- RESULT VIEW -->
 <div id="result-view" class="result-panel">
-  <button class="back-btn" onclick="goBack()">
-    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
-    Retour
-  </button>
+  <div class="result-header">
+    <button class="back-btn" onclick="goBack()">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+      Retour
+    </button>
+    <span class="result-count" id="result-count"></span>
+  </div>
 
   <p class="section-title">Interprétation NLP</p>
   <div class="tags-row" id="nlp-tags"></div>
@@ -470,69 +422,129 @@
 </div>
 
 <script>
-  // Fonction pour appeler ton API Python
-async function handleSearch(q) {
-  if (!q || q.trim().length === 0) return;
+  /* ── Couleurs cycliques pour les avatars ── */
+  const ART_PALETTES = [
+    { color: "#EEF2F8", textColor: "#5A7BAF" },
+    { color: "#E8F0E9", textColor: "#6B8F71" },
+    { color: "#F5EDDE", textColor: "#B8865A" },
+    { color: "#F5EEF5", textColor: "#8F6B8F" },
+    { color: "#FFF3E0", textColor: "#C47A2B" },
+    { color: "#E8F4F8", textColor: "#3A8FA8" },
+  ];
 
-  try {
-    // Appel à l'API FastAPI
-    const response = await fetch(`/search?query=${encodeURIComponent(q)}`);
-    const data = await response.json();
+  function getPalette(i) {
+    return ART_PALETTES[i % ART_PALETTES.length];
+  }
 
-    // Mise à jour de l'interface
-    document.getElementById('query-echo').textContent = '"' + q + '"';
+  function fillSearch(text) {
+    document.getElementById('search-input').value = text;
+    document.getElementById('search-input').focus();
+  }
 
-    // Affichage des Tags
+  function setLoading(on) {
+    const btn   = document.getElementById('search-btn');
+    const label = document.getElementById('btn-label');
+    if (on) {
+      btn.disabled = true;
+      label.innerHTML = '<span class="spinner"></span>';
+    } else {
+      btn.disabled = false;
+      label.textContent = 'Chercher';
+    }
+  }
+
+  async function doSearch() {
+    const q = document.getElementById('search-input').value.trim();
+    if (!q) return;
+
+    // Reset error
+    document.getElementById('error-box').classList.remove('visible');
+
+    setLoading(true);
+
+    try {
+      const res = await fetch(`/search?query=${encodeURIComponent(q)}&k=10`);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      renderResults(q, data);
+    } catch (err) {
+      console.error(err);
+      document.getElementById('error-box').classList.add('visible');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  function renderResults(q, data) {
+    // Tags NLP
+    document.getElementById('query-echo').textContent = `"${q}"`;
     const tagsEl = document.getElementById('nlp-tags');
     tagsEl.innerHTML = '';
-    data.tags.forEach(t => {
+    (data.tags || []).forEach(t => {
       const chip = document.createElement('span');
       chip.className = 'nlp-tag';
       chip.textContent = t;
       tagsEl.appendChild(chip);
     });
 
-    // Affichage des Résultats
+    // Compteur
+    const results = data.results || [];
+    document.getElementById('result-count').textContent =
+      results.length ? `${results.length} résultat${results.length > 1 ? 's' : ''}` : '';
+
+    // Rows
     const listEl = document.getElementById('results-list');
     listEl.innerHTML = '';
-    data.results.forEach((r, i) => {
+
+    results.forEach((r, i) => {
+      const palette = getPalette(i);
+      const scoreClass = r.scoreClass === 'high' ? 'score-high' : 'score-mid';
+      const initial = (r.art || r.title || '?')[0].toUpperCase();
+
       const row = document.createElement('div');
       row.className = 'result-row';
       row.innerHTML = `
         <span class="result-num">${i + 1}</span>
-        <div class="result-art" style="background:${r.color};color:${r.textColor};">${r.art}</div>
+        <div class="result-art" style="background:${palette.color};color:${palette.textColor};">${initial}</div>
         <div class="result-info">
-          <div class="result-title">${r.title}</div>
-          <div class="result-artist">${r.artist} · ${r.year}</div>
+          <div class="result-title">${escHtml(r.title)}</div>
+          <div class="result-artist">${escHtml(r.artist)}${r.year ? ' · ' + r.year : ''}</div>
         </div>
-        <span class="result-meta">${r.duration}</span>
-        <span class="result-score ${r.scoreClass}">${r.score}%</span>
+        <span class="result-meta">${escHtml(r.duration || '')}</span>
+        <span class="result-score ${scoreClass}">${r.score}%</span>
       `;
       listEl.appendChild(row);
+
+      // Staggered entrance
+      requestAnimationFrame(() => {
+        setTimeout(() => row.classList.add('visible'), i * 60);
+      });
     });
 
-    // Basculer la vue
+    // Switch view
     document.getElementById('home-view').style.display = 'none';
     document.getElementById('result-view').classList.add('active');
     window.scrollTo({ top: 0, behavior: 'smooth' });
-
-  } catch (error) {
-    console.error("Erreur lors de la recherche:", error);
-    alert("Impossible de contacter le moteur de recherche.");
   }
-}
 
-function goBack() {
-  document.getElementById('home-view').style.display = '';
-  document.getElementById('result-view').classList.remove('active');
-}
-
-// Gestion de l'input "Entrée"
-document.querySelector('.search-input').addEventListener('keypress', function (e) {
-  if (e.key === 'Enter') {
-    handleSearch(this.value);
+  function goBack() {
+    document.getElementById('home-view').style.display = '';
+    document.getElementById('result-view').classList.remove('active');
+    document.getElementById('results-list').innerHTML = '';
   }
-});
+
+  function escHtml(str) {
+    if (!str) return '';
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+
+  document.getElementById('search-input').addEventListener('keydown', e => {
+    if (e.key === 'Enter') doSearch();
+  });
 </script>
 </body>
 </html>
