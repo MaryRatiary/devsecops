@@ -8,3 +8,32 @@ services:
     environment:
       - ENV=production
     restart: always
+
+  gitlab:
+    image: gitlab/gitlab-ee:latest
+    hostname: gitlab.local
+    restart: always
+    ports:
+      - "7070:80"
+      - "7443:443"
+      - "2222:22"
+    volumes:
+      - gitlab_config:/etc/gitlab
+      - gitlab_logs:/var/log/gitlab
+      - gitlab_data:/var/opt/gitlab
+    shm_size: "256m"
+
+  gitlab-runner:
+    image: gitlab/gitlab-runner:latest
+    restart: always
+    depends_on:
+      - gitlab
+    volumes:
+      - gitlab_runner_config:/etc/gitlab-runner
+      - /var/run/docker.sock:/var/run/docker.sock
+
+volumes:
+  gitlab_config:
+  gitlab_logs:
+  gitlab_data:
+  gitlab_runner_config:
