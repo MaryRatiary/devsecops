@@ -8,30 +8,48 @@ pipeline {
     disableConcurrentBuilds()
   }
 
-  parameters {
-    string(name: 'REGISTRY', defaultValue: 'host.docker.internal:8082', description: 'Registry Docker/Harbor')
-    string(name: 'IMAGE_REPOSITORY', defaultValue: 'mlops/lyrx', description: 'Nom repository image')
-    string(name: 'IMAGE_TAG', defaultValue: '', description: 'Version image. Vide = numéro du build Jenkins')
-    string(name: 'TRIVY_IMAGE', defaultValue: 'aquasec/trivy:0.58.1', description: 'Image Trivy versionnée')
-    string(name: 'KUBESCAPE_IMAGE', defaultValue: 'quay.io/kubescape/kubescape:v3.0.17', description: 'Image Kubescape versionnée')
-    string(name: 'REGISTRY_CREDENTIALS_ID', defaultValue: 'registry-credentials', description: 'ID credentials Jenkins pour Harbor')
-    string(name: 'SONARQUBE_ENV', defaultValue: 'SonarQube', description: 'Nom config SonarQube dans Jenkins')
-    string(name: 'K8S_NAMESPACE', defaultValue: 'lyrx', description: 'Namespace Kubernetes')
-    string(name: 'K8S_DEPLOYMENT', defaultValue: 'lyrx', description: 'Deployment Kubernetes')
-    string(name: 'K8S_CONTAINER', defaultValue: 'lyrx', description: 'Container Kubernetes')
-    booleanParam(name: 'PUSH_IMAGE', defaultValue: false, description: 'Push image vers Harbor')
-    booleanParam(name: 'DEPLOY_K8S', defaultValue: false, description: 'Déployer sur Kubernetes')
-  }
-
   environment {
     PYTHONUNBUFFERED = '1'
     PIP_DISABLE_PIP_VERSION_CHECK = '1'
-    IMAGE_NAME = "${params.REGISTRY}/${params.IMAGE_REPOSITORY}"
-    FINAL_IMAGE_TAG = "${params.IMAGE_TAG ?: env.BUILD_NUMBER}"
     TRIVY_CACHE_DIR = '.trivycache'
   }
 
   stages {
+    stage('Prepare variables') {
+      steps {
+        script {
+          def required = [
+            'REGISTRY',
+            'IMAGE_REPOSITORY',
+            'IMAGE_TAG',
+            'TRIVY_IMAGE',
+            'KUBESCAPE_IMAGE',
+            'REGISTRY_CREDENTIALS_ID',
+            'SONARQUBE_ENV',
+            'PUSH_IMAGE',
+            'DEPLOY_K8S'
+          ]
+
+          required.each { key ->
+            if (!env[key]?.trim()) {
+              error "Variable Jenkins manquante: ${key}"
+            }
+          }
+
+          env.IMAGE_NAME = "${env.REGISTRY}/${env.IMAGE_REPOSITORY}"
+          env.FINAL_IMAGE_TAG = env.IMAGE_TAG.trim()
+
+          if (env.DEPLOY_K8S == 'true') {
+            ['K8S_NAMESPACE', 'K8S_DEPLOYMENT', 'K8S_CONTAINER'].each { key ->
+              if (!env[key]?.trim()) {
+                error "Variable Jenkins manquante pour Kubernetes: ${key}"
+              }
+            }
+          }
+        }
+      }
+    }
+
     stage('Checkout') {
       steps {
         checkout scm
@@ -100,7 +118,7 @@ pipeline {
       steps {
         script {
           catchError(buildResult: 'SUCCESS', stageResult: 'UNSTABLE') {
-            withSonarQubeEnv(params.SONARQUBE_ENV) {
+            withSonarQubeEnv(env.SONARQUBE_ENV) {
               sh '''
                 sonar-scanner \
                   -Dsonar.projectKey=lyrx \
@@ -162,9 +180,9 @@ pipeline {
     }
 
     stage('Push image') {
-      when { expression { return params.PUSH_IMAGE } }
+      when { expression { return env.PUSH_IMAGE == 'true' } }
       steps {
-        withCredentials([usernamePassword(credentialsId: params.REGISTRY_CREDENTIALS_ID, usernameVariable: 'REGISTRY_USER', passwordVariable: 'REGISTRY_PASSWORD')]) {
+        withCredentials([usernamePassword(credentialsId: env.REGISTRY_CREDENTIALS_ID, usernameVariable: 'REGISTRY_USER', passwordVariable: 'REGISTRY_PASSWORD')]) {
           sh '''
             echo "$REGISTRY_PASSWORD" | docker login -u "$REGISTRY_USER" --password-stdin "$REGISTRY"
             docker push ${IMAGE_NAME}:${FINAL_IMAGE_TAG}
@@ -174,7 +192,7 @@ pipeline {
     }
 
     stage('Deploy Kubernetes') {
-      when { expression { return params.DEPLOY_K8S } }
+      when { expression { return env.DEPLOY_K8S == 'true' } }
       steps {
         sh '''
           kubectl -n ${K8S_NAMESPACE} set image deployment/${K8S_DEPLOYMENT} ${K8S_CONTAINER}=${IMAGE_NAME}:${FINAL_IMAGE_TAG} --record
