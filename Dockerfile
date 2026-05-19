@@ -1,22 +1,23 @@
+FROM python:3.11-slim
 
-FROM python:3.12
-
-# Éviter que Python génère des fichiers .pyc et forcer l'affichage des logs
-ENV PYTHONDONTWRITEBYTECODE 1
-ENV PYTHONUNBUFFERED 1
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PIP_DISABLE_PIP_VERSION_CHECK=1
 
 WORKDIR /app
 
-RUN apt-get update && apt-get install -y \
+RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     libopenblas-dev \
     libomp-dev \
+    curl \
     && rm -rf /var/lib/apt/lists/*
 
 COPY requirements.txt .
 
-RUN pip install --no-cache-dir -r requirements.txt --timeout 10000000
-RUN python -c "from sentence_transformers import SentenceTransformer; SentenceTransformer('paraphrase-multilingual-MiniLM-L12-v2')"
+# Installer PyTorch CPU-only pour éviter le téléchargement CUDA de plusieurs Go.
+RUN pip install --no-cache-dir --index-url https://download.pytorch.org/whl/cpu torch==2.3.1+cpu \
+    && pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
