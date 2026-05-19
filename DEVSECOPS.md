@@ -25,6 +25,20 @@ URLs :
 
 ## Jenkins
 
+Le service Jenkins lancé par `docker compose up -d` utilise `docker/jenkins/Dockerfile`.
+Il installe Docker CLI, Git, Python/venv et les plugins Jenkins utiles au pipeline.
+
+Configuration du job Jenkins :
+- Definition : `Pipeline script from SCM`
+- SCM : `Git`
+- Repository URL : `https://github.com/MaryRatiary/devsecops.git`
+- Credentials : `- aucun -` si le repo est public
+- Branch Specifier : `*/deploy`
+- Script Path : `Jenkinsfile`
+- Lightweight checkout : activé
+
+Attention : le dépôt réel a seulement la branche `deploy`. Si Jenkins reste sur `*/master`, il ne trouvera pas le Jenkinsfile.
+
 Le fichier `Jenkinsfile` exécute :
 1. Installation Python
 2. Lint Black/Flake8
