@@ -51,9 +51,10 @@ pipeline {
     stage('Install dependencies') {
       steps {
         sh '''
-          python3 -m venv .venv
+          python3.11 -m venv .venv
           . .venv/bin/activate
           python -m pip install --upgrade pip
+          pip install --index-url https://download.pytorch.org/whl/cpu torch==2.3.1+cpu
           pip install -r requirements.txt
           pip install flake8 black pytest pytest-cov pytest-html bandit safety
         '''
