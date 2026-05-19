@@ -16,35 +16,29 @@ pipeline {
   stages {
     stage('Prepare variables') {
       steps {
+        sh '''
+          set -eu
+          for key in REGISTRY IMAGE_REPOSITORY IMAGE_TAG TRIVY_IMAGE KUBESCAPE_IMAGE REGISTRY_CREDENTIALS_ID SONARQUBE_ENV PUSH_IMAGE DEPLOY_K8S; do
+            eval "value=\${$key:-}"
+            if [ -z "$value" ]; then
+              echo "Variable Jenkins manquante: $key"
+              exit 1
+            fi
+          done
+
+          if [ "$DEPLOY_K8S" = "true" ]; then
+            for key in K8S_NAMESPACE K8S_DEPLOYMENT K8S_CONTAINER; do
+              eval "value=\${$key:-}"
+              if [ -z "$value" ]; then
+                echo "Variable Jenkins manquante pour Kubernetes: $key"
+                exit 1
+              fi
+            done
+          fi
+        '''
         script {
-          def required = [
-            'REGISTRY',
-            'IMAGE_REPOSITORY',
-            'IMAGE_TAG',
-            'TRIVY_IMAGE',
-            'KUBESCAPE_IMAGE',
-            'REGISTRY_CREDENTIALS_ID',
-            'SONARQUBE_ENV',
-            'PUSH_IMAGE',
-            'DEPLOY_K8S'
-          ]
-
-          required.each { key ->
-            if (!env[key]?.trim()) {
-              error "Variable Jenkins manquante: ${key}"
-            }
-          }
-
           env.IMAGE_NAME = "${env.REGISTRY}/${env.IMAGE_REPOSITORY}"
           env.FINAL_IMAGE_TAG = env.IMAGE_TAG.trim()
-
-          if (env.DEPLOY_K8S == 'true') {
-            ['K8S_NAMESPACE', 'K8S_DEPLOYMENT', 'K8S_CONTAINER'].each { key ->
-              if (!env[key]?.trim()) {
-                error "Variable Jenkins manquante pour Kubernetes: ${key}"
-              }
-            }
-          }
         }
       }
     }
