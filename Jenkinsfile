@@ -9,9 +9,17 @@ pipeline {
   }
 
   parameters {
-    string(name: 'REGISTRY', defaultValue: 'harbor.example.com', description: 'Registry Docker/Harbor')
+    string(name: 'REGISTRY', defaultValue: 'host.docker.internal:8082', description: 'Registry Docker/Harbor')
     string(name: 'IMAGE_REPOSITORY', defaultValue: 'mlops/lyrx', description: 'Nom repository image')
-    booleanParam(name: 'PUSH_IMAGE', defaultValue: false, description: 'Push image seulement si credentials configurés')
+    string(name: 'IMAGE_TAG', defaultValue: '', description: 'Version image. Vide = numéro du build Jenkins')
+    string(name: 'TRIVY_IMAGE', defaultValue: 'aquasec/trivy:0.58.1', description: 'Image Trivy versionnée')
+    string(name: 'KUBESCAPE_IMAGE', defaultValue: 'quay.io/kubescape/kubescape:v3.0.17', description: 'Image Kubescape versionnée')
+    string(name: 'REGISTRY_CREDENTIALS_ID', defaultValue: 'registry-credentials', description: 'ID credentials Jenkins pour Harbor')
+    string(name: 'SONARQUBE_ENV', defaultValue: 'SonarQube', description: 'Nom config SonarQube dans Jenkins')
+    string(name: 'K8S_NAMESPACE', defaultValue: 'lyrx', description: 'Namespace Kubernetes')
+    string(name: 'K8S_DEPLOYMENT', defaultValue: 'lyrx', description: 'Deployment Kubernetes')
+    string(name: 'K8S_CONTAINER', defaultValue: 'lyrx', description: 'Container Kubernetes')
+    booleanParam(name: 'PUSH_IMAGE', defaultValue: false, description: 'Push image vers Harbor')
     booleanParam(name: 'DEPLOY_K8S', defaultValue: false, description: 'Déployer sur Kubernetes')
   }
 
@@ -19,9 +27,8 @@ pipeline {
     PYTHONUNBUFFERED = '1'
     PIP_DISABLE_PIP_VERSION_CHECK = '1'
     IMAGE_NAME = "${params.REGISTRY}/${params.IMAGE_REPOSITORY}"
-    IMAGE_TAG = "${BUILD_NUMBER}"
+    FINAL_IMAGE_TAG = "${params.IMAGE_TAG ?: env.BUILD_NUMBER}"
     TRIVY_CACHE_DIR = '.trivycache'
-    SONARQUBE_ENV = 'SonarQube'
   }
 
   stages {
@@ -90,11 +97,10 @@ pipeline {
     }
 
     stage('SonarQube analysis') {
-      when { expression { return env.SONAR_HOST_URL || true } }
       steps {
         script {
           catchError(buildResult: 'SUCCESS', stageResult: 'UNSTABLE') {
-            withSonarQubeEnv(env.SONARQUBE_ENV) {
+            withSonarQubeEnv(params.SONARQUBE_ENV) {
               sh '''
                 sonar-scanner \
                   -Dsonar.projectKey=lyrx \
@@ -112,9 +118,9 @@ pipeline {
     stage('Docker build') {
       steps {
         sh '''
-          docker build -t ${IMAGE_NAME}:${IMAGE_TAG} -f Dockerfile .
+          docker build -t ${IMAGE_NAME}:${FINAL_IMAGE_TAG} -f Dockerfile .
           mkdir -p reports
-          docker image inspect ${IMAGE_NAME}:${IMAGE_TAG} > reports/docker-image.json
+          docker image inspect ${IMAGE_NAME}:${FINAL_IMAGE_TAG} > reports/docker-image.json
         '''
       }
       post { always { archiveArtifacts allowEmptyArchive: true, artifacts: 'reports/docker-image.json' } }
@@ -124,17 +130,17 @@ pipeline {
       steps {
         sh '''
           mkdir -p reports ${TRIVY_CACHE_DIR}
-          docker run --rm -v "$PWD:/work" -v /var/run/docker.sock:/var/run/docker.sock -v "$PWD/${TRIVY_CACHE_DIR}:/root/.cache/" aquasec/trivy:0.58.1 fs \
+          docker run --rm -v "$PWD:/work" -v /var/run/docker.sock:/var/run/docker.sock -v "$PWD/${TRIVY_CACHE_DIR}:/root/.cache/" ${TRIVY_IMAGE} fs \
             --format json --output /work/reports/trivy-fs.json \
             --severity HIGH,CRITICAL --ignore-unfixed /work || true
 
-          docker run --rm -v "$PWD:/work" -v /var/run/docker.sock:/var/run/docker.sock -v "$PWD/${TRIVY_CACHE_DIR}:/root/.cache/" aquasec/trivy:0.58.1 config \
+          docker run --rm -v "$PWD:/work" -v /var/run/docker.sock:/var/run/docker.sock -v "$PWD/${TRIVY_CACHE_DIR}:/root/.cache/" ${TRIVY_IMAGE} config \
             --format json --output /work/reports/trivy-config.json \
             --severity HIGH,CRITICAL /work || true
 
-          docker run --rm -v "$PWD:/work" -v /var/run/docker.sock:/var/run/docker.sock -v "$PWD/${TRIVY_CACHE_DIR}:/root/.cache/" aquasec/trivy:0.58.1 image \
+          docker run --rm -v "$PWD:/work" -v /var/run/docker.sock:/var/run/docker.sock -v "$PWD/${TRIVY_CACHE_DIR}:/root/.cache/" ${TRIVY_IMAGE} image \
             --format json --output /work/reports/trivy-image.json \
-            --severity HIGH,CRITICAL --ignore-unfixed ${IMAGE_NAME}:${IMAGE_TAG} || true
+            --severity HIGH,CRITICAL --ignore-unfixed ${IMAGE_NAME}:${FINAL_IMAGE_TAG} || true
         '''
       }
       post { always { archiveArtifacts allowEmptyArchive: true, artifacts: 'reports/trivy-*.json' } }
@@ -145,7 +151,7 @@ pipeline {
         sh '''
           mkdir -p reports
           if [ -d deploy/k8s ]; then
-            docker run --rm -v "$PWD:/work" quay.io/kubescape/kubescape:v3.0.17 scan framework nsa /work/deploy/k8s \
+            docker run --rm -v "$PWD:/work" ${KUBESCAPE_IMAGE} scan framework nsa /work/deploy/k8s \
               --format json --output /work/reports/kubescape-nsa.json || true
           else
             echo 'Pas de manifests deploy/k8s à scanner.' | tee reports/kubescape-nsa.json
@@ -156,33 +162,23 @@ pipeline {
     }
 
     stage('Push image') {
-      when {
-        allOf {
-          branch 'main'
-          expression { return params.PUSH_IMAGE }
-        }
-      }
+      when { expression { return params.PUSH_IMAGE } }
       steps {
-        withCredentials([usernamePassword(credentialsId: 'registry-credentials', usernameVariable: 'REGISTRY_USER', passwordVariable: 'REGISTRY_PASSWORD')]) {
+        withCredentials([usernamePassword(credentialsId: params.REGISTRY_CREDENTIALS_ID, usernameVariable: 'REGISTRY_USER', passwordVariable: 'REGISTRY_PASSWORD')]) {
           sh '''
             echo "$REGISTRY_PASSWORD" | docker login -u "$REGISTRY_USER" --password-stdin "$REGISTRY"
-            docker push ${IMAGE_NAME}:${IMAGE_TAG}
+            docker push ${IMAGE_NAME}:${FINAL_IMAGE_TAG}
           '''
         }
       }
     }
 
     stage('Deploy Kubernetes') {
-      when {
-        allOf {
-          branch 'main'
-          expression { return params.DEPLOY_K8S }
-        }
-      }
+      when { expression { return params.DEPLOY_K8S } }
       steps {
         sh '''
-          kubectl -n lyrx set image deployment/lyrx lyrx=${IMAGE_NAME}:${IMAGE_TAG} --record
-          kubectl -n lyrx rollout status deployment/lyrx --timeout=120s
+          kubectl -n ${K8S_NAMESPACE} set image deployment/${K8S_DEPLOYMENT} ${K8S_CONTAINER}=${IMAGE_NAME}:${FINAL_IMAGE_TAG} --record
+          kubectl -n ${K8S_NAMESPACE} rollout status deployment/${K8S_DEPLOYMENT} --timeout=120s
         '''
       }
     }
@@ -193,7 +189,7 @@ pipeline {
       archiveArtifacts allowEmptyArchive: true, artifacts: 'reports/**'
       cleanWs(deleteDirs: true, disableDeferredWipeout: true)
     }
-    success { echo 'Pipeline DevSecOps OK' }
+    success { echo "Pipeline DevSecOps OK: ${IMAGE_NAME}:${FINAL_IMAGE_TAG}" }
     unstable { echo 'Pipeline terminé avec alertes sécurité/qualité' }
     failure { echo 'Pipeline échoué' }
   }

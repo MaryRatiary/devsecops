@@ -28,7 +28,7 @@ spec:
           type: RuntimeDefault
       containers:
         - name: lyrx
-          image: harbor.example.com/mlops/lyrx:1.0.0
+          image: localhost:8082/mlops/lyrx:1.0.0
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 8000

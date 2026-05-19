@@ -1,32 +1,52 @@
 # Guide DevSecOps Lyrx
 
-Ce projet contient maintenant une base plus fonctionnelle pour Jenkins, Trivy, SonarQube et Kubernetes/Kubescape.
+Ce projet utilise des variables dans `.env` / `.env.example` pour éviter les valeurs figées.
+Aucun push ne doit utiliser `:latest` : toujours une version explicite.
+
+## Préparation
+
+```bash
+cp .env.example .env
+```
+
+Modifie `.env` selon ta machine, par exemple :
+
+```bash
+REGISTRY=localhost:8082
+IMAGE_REPOSITORY=mlops/lyrx
+APP_VERSION=1.0.0
+APP_IMAGE=localhost:8082/mlops/lyrx:1.0.0
+```
 
 ## Services locaux
 
 Application seule :
 
 ```bash
-docker compose up -d lyrx
+docker compose --env-file .env up -d lyrx
 ```
 
 Stack CI locale Jenkins + SonarQube :
 
 ```bash
-docker compose up -d
+docker compose --env-file .env up -d
 ```
 
-Cela démarre automatiquement : app + Jenkins + SonarQube + Postgres SonarQube.
+URLs selon `.env` :
+- App : `http://localhost:${APP_PORT}`
+- Jenkins : `http://localhost:${JENKINS_HTTP_PORT}`
+- SonarQube : `http://localhost:${SONARQUBE_PORT}`
 
-URLs :
-- App : http://localhost:8000
-- Jenkins : http://localhost:8081
-- SonarQube : http://localhost:9000
+## Harbor manuel
+
+```bash
+source .env
+docker login ${REGISTRY}
+docker build -t ${REGISTRY}/${IMAGE_REPOSITORY}:${APP_VERSION} .
+docker push ${REGISTRY}/${IMAGE_REPOSITORY}:${APP_VERSION}
+```
 
 ## Jenkins
-
-Le service Jenkins lancé par `docker compose up -d` utilise `docker/jenkins/Dockerfile`.
-Il installe Docker CLI, Git, Python/venv et les plugins Jenkins utiles au pipeline.
 
 Configuration du job Jenkins :
 - Definition : `Pipeline script from SCM`
@@ -37,56 +57,56 @@ Configuration du job Jenkins :
 - Script Path : `Jenkinsfile`
 - Lightweight checkout : activé
 
-Attention : le dépôt réel a seulement la branche `deploy`. Si Jenkins reste sur `*/master`, il ne trouvera pas le Jenkinsfile.
+Paramètres Jenkins importants :
+- `REGISTRY` : ex. `host.docker.internal:8082` si Jenkins tourne dans Docker et Harbor sur le Mac
+- `IMAGE_REPOSITORY` : ex. `mlops/lyrx`
+- `IMAGE_TAG` : version explicite, ex. `1.0.0`. Vide = numéro du build Jenkins
+- `TRIVY_IMAGE` : ex. `aquasec/trivy:0.58.1`
+- `KUBESCAPE_IMAGE` : ex. `quay.io/kubescape/kubescape:v3.0.17`
+- `REGISTRY_CREDENTIALS_ID` : ex. `registry-credentials`
+- `PUSH_IMAGE` : `true` pour push vers Harbor
+- `DEPLOY_K8S` : `false` si tu veux seulement push l'image
 
-Le fichier `Jenkinsfile` exécute :
-1. Installation Python
-2. Lint Black/Flake8
-3. Tests + couverture
-4. SAST Bandit/Safety
-5. Analyse SonarQube
-6. Build Docker
-7. Scans Trivy filesystem/config/image
-8. Scan Kubernetes avec Kubescape
-9. Push image optionnel
-10. Déploiement Kubernetes optionnel
-
-Credentials Jenkins recommandés :
-- `registry-credentials` : username/password Harbor ou Docker Registry
-- Installation SonarQube nommée `SonarQube`
-- Outils Jenkins : Docker, Python3, sonar-scanner, kubectl si déploiement activé
-
-Paramètres utiles :
-- `REGISTRY` : registry cible, ex. `harbor.example.com`
-- `IMAGE_REPOSITORY` : repository image, ex. `mlops/lyrx`
-- `PUSH_IMAGE` : pousser l'image après build
-- `DEPLOY_K8S` : déployer sur Kubernetes
+Credential Jenkins Harbor :
+- Type : Username with password
+- ID : valeur de `REGISTRY_CREDENTIALS_ID`
+- Username : user Harbor
+- Password : password Harbor
 
 ## Trivy manuel
 
 ```bash
+source .env
 mkdir -p reports
-docker run --rm -v "$PWD:/work" aquasec/trivy:0.58.1 fs --severity HIGH,CRITICAL --format json --output /work/reports/trivy-fs.json /work
-docker run --rm -v "$PWD:/work" aquasec/trivy:0.58.1 config --severity HIGH,CRITICAL --format json --output /work/reports/trivy-config.json /work
-docker build -t lyrx:1.0.0 .
-docker run --rm -v "$PWD:/work" -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy:0.58.1 image --severity HIGH,CRITICAL --format json --output /work/reports/trivy-image.json lyrx:1.0.0
+docker run --rm -v "$PWD:/work" ${TRIVY_IMAGE} fs --severity HIGH,CRITICAL --format json --output /work/reports/trivy-fs.json /work
+docker run --rm -v "$PWD:/work" ${TRIVY_IMAGE} config --severity HIGH,CRITICAL --format json --output /work/reports/trivy-config.json /work
+docker run --rm -v "$PWD:/work" -v /var/run/docker.sock:/var/run/docker.sock ${TRIVY_IMAGE} image --severity HIGH,CRITICAL --format json --output /work/reports/trivy-image.json ${REGISTRY}/${IMAGE_REPOSITORY}:${APP_VERSION}
 ```
 
 ## Kubernetes / Kubescape
 
-Manifests : `deploy/k8s/lyrx.yaml`
+Template variables : `deploy/k8s/lyrx.yaml.tpl`
+Manifest généré exemple : `deploy/k8s/lyrx.yaml`
+
+Générer un manifest depuis les variables :
+
+```bash
+source .env
+IMAGE_TAG=${APP_VERSION} envsubst < deploy/k8s/lyrx.yaml.tpl > deploy/k8s/lyrx.yaml
+```
 
 Scan sécurité :
 
 ```bash
-docker run --rm -v "$PWD:/work" quay.io/kubescape/kubescape:v3.0.17 scan framework nsa /work/deploy/k8s --format json --output /work/reports/kubescape-nsa.json
+source .env
+docker run --rm -v "$PWD:/work" ${KUBESCAPE_IMAGE} scan framework nsa /work/deploy/k8s --format json --output /work/reports/kubescape-nsa.json
 ```
 
 Déploiement :
 
 ```bash
 kubectl apply -f deploy/k8s/lyrx.yaml
-kubectl -n lyrx rollout status deployment/lyrx
+kubectl -n ${K8S_NAMESPACE} rollout status deployment/${K8S_DEPLOYMENT}
 ```
 
 ## SonarQube
@@ -96,5 +116,5 @@ Fichier de configuration : `sonar-project.properties`
 Commande locale si `sonar-scanner` est installé :
 
 ```bash
-sonar-scanner -Dsonar.host.url=http://localhost:9000 -Dsonar.token=<TOKEN>
+sonar-scanner -Dsonar.host.url=http://localhost:${SONARQUBE_PORT} -Dsonar.token=<TOKEN>
 ```
