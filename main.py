@@ -6,7 +6,13 @@ import faiss
 from sentence_transformers import SentenceTransformer
 
 
-app = FastAPI()
+app = FastAPI(title="Lyrx Semantic Music Search", version="1.0.0")
+
+
+@app.get("/health")
+def health_check():
+    return {"status": "healthy", "service": "lyrx"}
+
 
 # --- Chargement des ressources ---
 data = pd.read_csv('data/lyrx_cleaned.csv')
