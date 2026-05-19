@@ -75,6 +75,7 @@ pipeline {
       steps {
         sh '''
           . .venv/bin/activate
+          mkdir -p reports
           pytest tests -v \
             --junitxml=reports/junit.xml \
             --cov=src --cov=main \
