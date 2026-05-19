@@ -32,36 +32,34 @@ test:
 
 build:
   stage: build
-  image: docker:latest
+  image: docker:27.4.1
   services:
     - docker:dind
   script:
     - docker login -u $REGISTRY_USER -p $REGISTRY_PASSWORD $REGISTRY
     - docker build -t $IMAGE_NAME:$IMAGE_TAG -f docker/Dockerfile .
-    - docker tag $IMAGE_NAME:$IMAGE_TAG $IMAGE_NAME:latest
 
 scan:
   stage: scan
-  image: aquasec/trivy:latest
+  image: aquasec/trivy:0.58.1
   script:
     - trivy image --severity HIGH,CRITICAL $IMAGE_NAME:$IMAGE_TAG
   allow_failure: true
 
 push_harbor:
   stage: push
-  image: docker:latest
+  image: docker:27.4.1
   services:
     - docker:dind
   script:
     - docker login -u $REGISTRY_USER -p $REGISTRY_PASSWORD $REGISTRY
     - docker push $IMAGE_NAME:$IMAGE_TAG
-    - docker push $IMAGE_NAME:latest
   only:
     - main
 
 deploy:
   stage: deploy
-  image: alpine:latest
+  image: alpine:3.21
   script:
     - apk add --no-cache openssh-client
     - mkdir -p ~/.ssh

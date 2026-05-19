@@ -112,7 +112,7 @@ pipeline {
     stage('Docker build') {
       steps {
         sh '''
-          docker build -t ${IMAGE_NAME}:${IMAGE_TAG} -t ${IMAGE_NAME}:latest -f Dockerfile .
+          docker build -t ${IMAGE_NAME}:${IMAGE_TAG} -f Dockerfile .
           mkdir -p reports
           docker image inspect ${IMAGE_NAME}:${IMAGE_TAG} > reports/docker-image.json
         '''
@@ -124,15 +124,15 @@ pipeline {
       steps {
         sh '''
           mkdir -p reports ${TRIVY_CACHE_DIR}
-          docker run --rm -v "$PWD:/work" -v /var/run/docker.sock:/var/run/docker.sock -v "$PWD/${TRIVY_CACHE_DIR}:/root/.cache/" aquasec/trivy:latest fs \
+          docker run --rm -v "$PWD:/work" -v /var/run/docker.sock:/var/run/docker.sock -v "$PWD/${TRIVY_CACHE_DIR}:/root/.cache/" aquasec/trivy:0.58.1 fs \
             --format json --output /work/reports/trivy-fs.json \
             --severity HIGH,CRITICAL --ignore-unfixed /work || true
 
-          docker run --rm -v "$PWD:/work" -v /var/run/docker.sock:/var/run/docker.sock -v "$PWD/${TRIVY_CACHE_DIR}:/root/.cache/" aquasec/trivy:latest config \
+          docker run --rm -v "$PWD:/work" -v /var/run/docker.sock:/var/run/docker.sock -v "$PWD/${TRIVY_CACHE_DIR}:/root/.cache/" aquasec/trivy:0.58.1 config \
             --format json --output /work/reports/trivy-config.json \
             --severity HIGH,CRITICAL /work || true
 
-          docker run --rm -v "$PWD:/work" -v /var/run/docker.sock:/var/run/docker.sock -v "$PWD/${TRIVY_CACHE_DIR}:/root/.cache/" aquasec/trivy:latest image \
+          docker run --rm -v "$PWD:/work" -v /var/run/docker.sock:/var/run/docker.sock -v "$PWD/${TRIVY_CACHE_DIR}:/root/.cache/" aquasec/trivy:0.58.1 image \
             --format json --output /work/reports/trivy-image.json \
             --severity HIGH,CRITICAL --ignore-unfixed ${IMAGE_NAME}:${IMAGE_TAG} || true
         '''
@@ -145,7 +145,7 @@ pipeline {
         sh '''
           mkdir -p reports
           if [ -d deploy/k8s ]; then
-            docker run --rm -v "$PWD:/work" quay.io/kubescape/kubescape:latest scan framework nsa /work/deploy/k8s \
+            docker run --rm -v "$PWD:/work" quay.io/kubescape/kubescape:v3.0.17 scan framework nsa /work/deploy/k8s \
               --format json --output /work/reports/kubescape-nsa.json || true
           else
             echo 'Pas de manifests deploy/k8s à scanner.' | tee reports/kubescape-nsa.json
@@ -167,7 +167,6 @@ pipeline {
           sh '''
             echo "$REGISTRY_PASSWORD" | docker login -u "$REGISTRY_USER" --password-stdin "$REGISTRY"
             docker push ${IMAGE_NAME}:${IMAGE_TAG}
-            docker push ${IMAGE_NAME}:latest
           '''
         }
       }

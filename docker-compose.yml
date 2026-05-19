@@ -3,7 +3,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    image: lyrx:local
+    image: lyrx:1.0.0
     ports:
       - "8000:8000"
     environment:
@@ -20,7 +20,7 @@ services:
     build:
       context: .
       dockerfile: docker/jenkins/Dockerfile
-    image: lyrx-jenkins:local
+    image: lyrx-jenkins:2.559-jdk17
     user: root
     ports:
       - "8081:8080"

@@ -66,10 +66,10 @@ Paramètres utiles :
 
 ```bash
 mkdir -p reports
-docker run --rm -v "$PWD:/work" aquasec/trivy:latest fs --severity HIGH,CRITICAL --format json --output /work/reports/trivy-fs.json /work
-docker run --rm -v "$PWD:/work" aquasec/trivy:latest config --severity HIGH,CRITICAL --format json --output /work/reports/trivy-config.json /work
-docker build -t lyrx:local .
-docker run --rm -v "$PWD:/work" -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy:latest image --severity HIGH,CRITICAL --format json --output /work/reports/trivy-image.json lyrx:local
+docker run --rm -v "$PWD:/work" aquasec/trivy:0.58.1 fs --severity HIGH,CRITICAL --format json --output /work/reports/trivy-fs.json /work
+docker run --rm -v "$PWD:/work" aquasec/trivy:0.58.1 config --severity HIGH,CRITICAL --format json --output /work/reports/trivy-config.json /work
+docker build -t lyrx:1.0.0 .
+docker run --rm -v "$PWD:/work" -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy:0.58.1 image --severity HIGH,CRITICAL --format json --output /work/reports/trivy-image.json lyrx:1.0.0
 ```
 
 ## Kubernetes / Kubescape
@@ -79,7 +79,7 @@ Manifests : `deploy/k8s/lyrx.yaml`
 Scan sécurité :
 
 ```bash
-docker run --rm -v "$PWD:/work" quay.io/kubescape/kubescape:latest scan framework nsa /work/deploy/k8s --format json --output /work/reports/kubescape-nsa.json
+docker run --rm -v "$PWD:/work" quay.io/kubescape/kubescape:v3.0.17 scan framework nsa /work/deploy/k8s --format json --output /work/reports/kubescape-nsa.json
 ```
 
 Déploiement :
