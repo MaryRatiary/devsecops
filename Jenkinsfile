@@ -18,22 +18,20 @@ pipeline {
       steps {
         sh '''
           set -eu
-          for key in REGISTRY IMAGE_REPOSITORY IMAGE_TAG TRIVY_IMAGE KUBESCAPE_IMAGE REGISTRY_CREDENTIALS_ID SONARQUBE_ENV PUSH_IMAGE DEPLOY_K8S; do
-            eval "value=\${$key:-}"
-            if [ -z "$value" ]; then
-              echo "Variable Jenkins manquante: $key"
-              exit 1
-            fi
-          done
+          : "${REGISTRY:?Variable Jenkins manquante: REGISTRY}"
+          : "${IMAGE_REPOSITORY:?Variable Jenkins manquante: IMAGE_REPOSITORY}"
+          : "${IMAGE_TAG:?Variable Jenkins manquante: IMAGE_TAG}"
+          : "${TRIVY_IMAGE:?Variable Jenkins manquante: TRIVY_IMAGE}"
+          : "${KUBESCAPE_IMAGE:?Variable Jenkins manquante: KUBESCAPE_IMAGE}"
+          : "${REGISTRY_CREDENTIALS_ID:?Variable Jenkins manquante: REGISTRY_CREDENTIALS_ID}"
+          : "${SONARQUBE_ENV:?Variable Jenkins manquante: SONARQUBE_ENV}"
+          : "${PUSH_IMAGE:?Variable Jenkins manquante: PUSH_IMAGE}"
+          : "${DEPLOY_K8S:?Variable Jenkins manquante: DEPLOY_K8S}"
 
           if [ "$DEPLOY_K8S" = "true" ]; then
-            for key in K8S_NAMESPACE K8S_DEPLOYMENT K8S_CONTAINER; do
-              eval "value=\${$key:-}"
-              if [ -z "$value" ]; then
-                echo "Variable Jenkins manquante pour Kubernetes: $key"
-                exit 1
-              fi
-            done
+            : "${K8S_NAMESPACE:?Variable Jenkins manquante pour Kubernetes: K8S_NAMESPACE}"
+            : "${K8S_DEPLOYMENT:?Variable Jenkins manquante pour Kubernetes: K8S_DEPLOYMENT}"
+            : "${K8S_CONTAINER:?Variable Jenkins manquante pour Kubernetes: K8S_CONTAINER}"
           fi
         '''
         script {
