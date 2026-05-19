@@ -12,7 +12,6 @@ reports
 .env
 .env.*
 !/.env.example
-.DS_Store
 NLPMusic.ipynb
 validation
 monitoring
@@ -25,3 +24,4 @@ Jenkinsfile
 docker/
 deploy/
 data/spotify_songs.csv
+.DS_Store
