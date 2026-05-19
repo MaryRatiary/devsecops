@@ -13,8 +13,10 @@ docker compose up -d lyrx
 Stack CI locale Jenkins + SonarQube :
 
 ```bash
-docker compose --profile ci up -d jenkins sonarqube
+docker compose up -d
 ```
+
+Cela démarre automatiquement : app + Jenkins + SonarQube + Postgres SonarQube.
 
 URLs :
 - App : http://localhost:8000

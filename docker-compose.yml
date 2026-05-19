@@ -18,7 +18,6 @@ services:
 
   jenkins:
     image: jenkins/jenkins:lts-jdk17
-    profiles: ["ci"]
     user: root
     ports:
       - "8081:8080"
@@ -30,7 +29,6 @@ services:
 
   sonarqube:
     image: sonarqube:community
-    profiles: ["ci"]
     depends_on:
       - sonar-db
     ports:
@@ -47,7 +45,6 @@ services:
 
   sonar-db:
     image: postgres:15-alpine
-    profiles: ["ci"]
     environment:
       POSTGRES_USER: sonar
       POSTGRES_PASSWORD: sonar
