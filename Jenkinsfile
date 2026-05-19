@@ -54,7 +54,7 @@ pipeline {
           python3.11 -m venv .venv
           . .venv/bin/activate
           python -m pip install --upgrade pip
-          pip install --index-url https://download.pytorch.org/whl/cpu torch==2.3.1+cpu
+          pip install --index-url https://download.pytorch.org/whl/cpu torch==2.2.2
           pip install -r requirements.txt
           pip install flake8 black pytest pytest-cov pytest-html bandit safety
         '''
