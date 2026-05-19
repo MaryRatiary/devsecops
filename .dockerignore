@@ -1,0 +1,15 @@
+.git
+.gitignore
+.venv
+__pycache__
+.pytest_cache
+.coverage
+reports
+.trivycache
+*.pyc
+*.pyo
+*.pyd
+.env
+.env.*
+!/.env.example
+NLPMusic.ipynb
