@@ -13,3 +13,15 @@ reports
 .env.*
 !/.env.example
 NLPMusic.ipynb
++validation
++monitoring
++jenkins-credentials.sh
++docker-compose.yml
++DEVSECOPS.md
++README.md
++.gitlab-ci.yml
++Jenkinsfile
++docker/
++deploy/
++data/spotify_songs.csv
++.DS_Store
