@@ -62,7 +62,7 @@ for name in files:
     p = pathlib.Path(name)
     if p.exists():
         h.update(name.encode())
-        h.update(b'\0')
+        h.update(b'::')
         h.update(p.read_bytes())
 print(h.hexdigest())
 PY
