@@ -1,3 +1,4 @@
+# syntax=docker/dockerfile:1.7
 FROM python:3.11-slim-bookworm
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
@@ -7,20 +8,21 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 
 WORKDIR /app
 
-RUN apt-get update \
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    --mount=type=cache,target=/var/lib/apt/lists,sharing=locked \
+    apt-get update \
     && apt-get install -y --no-install-recommends \
       libopenblas0 \
       libgomp1 \
-      curl \
-    && rm -rf /var/lib/apt/lists/*
+      curl
 
 COPY requirements.txt .
 
 # Installer PyTorch CPU-only séparément pour éviter les énormes dépendances CUDA.
 # Version alignée avec l'installation Jenkins qui passe déjà en local.
-RUN python -m pip install --upgrade pip \
-    && pip install --no-cache-dir --index-url https://download.pytorch.org/whl/cpu torch==2.2.2 \
-    && pip install --no-cache-dir -r requirements.txt
+RUN --mount=type=cache,target=/root/.cache/pip \
+    pip install --timeout 300 --retries 10 --index-url https://download.pytorch.org/whl/cpu torch==2.2.2 \
+    && pip install --timeout 300 --retries 10 --prefer-binary -r requirements.txt
 
 COPY . .
 

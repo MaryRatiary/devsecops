@@ -11,6 +11,8 @@ pipeline {
   environment {
     PYTHONUNBUFFERED = '1'
     PIP_DISABLE_PIP_VERSION_CHECK = '1'
+    PIP_DEFAULT_TIMEOUT = '300'
+    PIP_RETRIES = '10'
     PIP_CACHE_DIR = '.pip-cache'
     DOCKER_BUILDKIT = '1'
     TRIVY_CACHE_DIR = '.trivycache'
@@ -79,10 +81,10 @@ PY
           echo "Installation/mise à jour des dépendances..."
           python3.11 -m venv .venv
           . .venv/bin/activate
-          python -m pip install --upgrade pip
-          pip install --index-url https://download.pytorch.org/whl/cpu torch==2.2.2
-          pip install -r requirements.txt
-          pip install flake8 black pytest pytest-cov pytest-html bandit safety
+          python -m pip install --upgrade pip --timeout 300 --retries 10
+          pip install --index-url https://download.pytorch.org/whl/cpu --timeout 300 --retries 10 torch==2.2.2
+          pip install --timeout 300 --retries 10 --prefer-binary -r requirements.txt
+          pip install --timeout 300 --retries 10 --prefer-binary flake8 black pytest pytest-cov pytest-html bandit safety
           echo "$REQ_HASH" > .venv/.requirements.sha256
         '''
       }
@@ -156,7 +158,7 @@ PY
     stage('Docker build') {
       steps {
         sh '''
-          docker build -t ${IMAGE_NAME}:${FINAL_IMAGE_TAG} -f Dockerfile .
+          docker build --cache-from ${IMAGE_NAME}:${FINAL_IMAGE_TAG} -t ${IMAGE_NAME}:${FINAL_IMAGE_TAG} -f Dockerfile .
           mkdir -p reports
           docker image inspect ${IMAGE_NAME}:${FINAL_IMAGE_TAG} > reports/docker-image.json
         '''
