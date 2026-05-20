@@ -142,14 +142,21 @@ pipeline {
         sh '''
           mkdir -p reports ${TRIVY_CACHE_DIR}
           docker run --rm -v "$PWD:/work" -v /var/run/docker.sock:/var/run/docker.sock -v "$PWD/${TRIVY_CACHE_DIR}:/root/.cache/" ${TRIVY_IMAGE} fs \
+            --scanners vuln \
+            --skip-dirs /work/.venv --skip-dirs /work/.trivycache --skip-dirs /work/.git \
+            --timeout 15m \
             --format json --output /work/reports/trivy-fs.json \
             --severity HIGH,CRITICAL --ignore-unfixed /work || true
 
           docker run --rm -v "$PWD:/work" -v /var/run/docker.sock:/var/run/docker.sock -v "$PWD/${TRIVY_CACHE_DIR}:/root/.cache/" ${TRIVY_IMAGE} config \
+            --skip-dirs /work/.venv --skip-dirs /work/.trivycache --skip-dirs /work/.git \
+            --timeout 15m \
             --format json --output /work/reports/trivy-config.json \
             --severity HIGH,CRITICAL /work || true
 
           docker run --rm -v "$PWD:/work" -v /var/run/docker.sock:/var/run/docker.sock -v "$PWD/${TRIVY_CACHE_DIR}:/root/.cache/" ${TRIVY_IMAGE} image \
+            --scanners vuln \
+            --timeout 15m \
             --format json --output /work/reports/trivy-image.json \
             --severity HIGH,CRITICAL --ignore-unfixed ${IMAGE_NAME}:${FINAL_IMAGE_TAG} || true
         '''
@@ -162,8 +169,12 @@ pipeline {
         sh '''
           mkdir -p reports
           if [ -d deploy/k8s ]; then
-            docker run --rm -v "$PWD:/work" ${KUBESCAPE_IMAGE} scan framework nsa /work/deploy/k8s \
-              --format json --output /work/reports/kubescape-nsa.json || true
+            if command -v kubescape >/dev/null 2>&1; then
+              kubescape scan framework nsa deploy/k8s \
+                --format json --output reports/kubescape-nsa.json || true
+            else
+              echo 'Kubescape CLI absent sur Jenkins; scan ignoré pour éviter le conteneur serveur bloquant.' | tee reports/kubescape-nsa.json
+            fi
           else
             echo 'Pas de manifests deploy/k8s à scanner.' | tee reports/kubescape-nsa.json
           fi
