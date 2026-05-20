@@ -87,7 +87,7 @@ pipeline {
       post {
         always {
           junit allowEmptyResults: true, testResults: 'reports/junit.xml'
-          publishHTML(target: [reportDir: 'reports', reportFiles: 'pytest.html', reportName: 'Pytest Report', allowMissing: true, keepAll: true, alwaysLinkToLastBuild: true])
+          // HTML Publisher plugin absent on this Jenkins; keep pytest.html as a normal archived artifact.
           archiveArtifacts allowEmptyArchive: true, artifacts: 'reports/**'
         }
       }
