@@ -151,6 +151,11 @@ activemq-data/
 .env
 .envrc
 .venv
+.venv/
+.pip-cache/
+.trivycache/
+reports/
+.docker/
 env/
 venv/
 ENV/

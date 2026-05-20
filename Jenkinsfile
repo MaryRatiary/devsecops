@@ -3,6 +3,7 @@ pipeline {
 
   options {
     timestamps()
+    skipDefaultCheckout(true)
     buildDiscarder(logRotator(numToKeepStr: '20'))
     disableConcurrentBuilds()
   }
@@ -10,6 +11,8 @@ pipeline {
   environment {
     PYTHONUNBUFFERED = '1'
     PIP_DISABLE_PIP_VERSION_CHECK = '1'
+    PIP_CACHE_DIR = '.pip-cache'
+    DOCKER_BUILDKIT = '1'
     TRIVY_CACHE_DIR = '.trivycache'
   }
 
@@ -51,12 +54,36 @@ pipeline {
     stage('Install dependencies') {
       steps {
         sh '''
+          set -eu
+          REQ_HASH=$(python3.11 - <<'PY'
+import hashlib, pathlib
+files = ['requirements.txt']
+h = hashlib.sha256()
+for name in files:
+    p = pathlib.Path(name)
+    if p.exists():
+        h.update(name.encode())
+        h.update(b'\0')
+        h.update(p.read_bytes())
+print(h.hexdigest())
+PY
+)
+
+          if [ -x .venv/bin/python ] && [ -f .venv/.requirements.sha256 ] && [ "$(cat .venv/.requirements.sha256)" = "$REQ_HASH" ]; then
+            echo "Dépendances déjà installées, cache .venv réutilisé."
+            . .venv/bin/activate
+            python --version
+            exit 0
+          fi
+
+          echo "Installation/mise à jour des dépendances..."
           python3.11 -m venv .venv
           . .venv/bin/activate
           python -m pip install --upgrade pip
           pip install --index-url https://download.pytorch.org/whl/cpu torch==2.2.2
           pip install -r requirements.txt
           pip install flake8 black pytest pytest-cov pytest-html bandit safety
+          echo "$REQ_HASH" > .venv/.requirements.sha256
         '''
       }
     }
@@ -209,7 +236,7 @@ pipeline {
   post {
     always {
       archiveArtifacts allowEmptyArchive: true, artifacts: 'reports/**'
-      cleanWs(deleteDirs: true, disableDeferredWipeout: true)
+      echo 'Workspace conservé pour réutiliser le clone Git, .venv, pip cache, Trivy cache et Docker cache.'
     }
     success { echo "Pipeline DevSecOps OK: ${IMAGE_NAME}:${FINAL_IMAGE_TAG}" }
     unstable { echo 'Pipeline terminé avec alertes sécurité/qualité' }
