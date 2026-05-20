@@ -217,7 +217,11 @@ PY
       steps {
         withCredentials([usernamePassword(credentialsId: env.REGISTRY_CREDENTIALS_ID, usernameVariable: 'REGISTRY_USER', passwordVariable: 'REGISTRY_PASSWORD')]) {
           sh '''
-            echo "$REGISTRY_PASSWORD" | docker login -u "$REGISTRY_USER" --password-stdin "$REGISTRY"
+            REGISTRY_LOGIN_URL="$REGISTRY"
+            if [ "${REGISTRY_INSECURE:-false}" = "true" ]; then
+              REGISTRY_LOGIN_URL="http://$REGISTRY"
+            fi
+            echo "$REGISTRY_PASSWORD" | docker login -u "$REGISTRY_USER" --password-stdin "$REGISTRY_LOGIN_URL"
             docker push ${IMAGE_NAME}:${FINAL_IMAGE_TAG}
           '''
         }
